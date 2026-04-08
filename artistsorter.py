@@ -2,32 +2,46 @@ import streamlit as st
 import pandas as pd
 import re
 
-# Load data
-df = pd.read_csv("demoartists.csv")
-
-# Clean columns
-df.columns = df.columns.str.strip().str.lower()
-
-# Clean price column
-df['price'] = (
-    df['price']
-    .astype(str)
-    .str.replace(r"[^\d.]", "", regex=True)
-)
-df['price'] = pd.to_numeric(df['price'], errors='coerce')
-df = df.dropna(subset=['price'])
-
 st.set_page_config(page_title="Artist Search Tool", layout="wide")
 
 st.title("🎤 Artist Search Tool")
 
-# -------- SESSION STATE FOR SHORTLIST -------- #
+# 🔗 GOOGLE SHEET LINK (REPLACE YOUR_ID)
+sheet_url = "https://docs.google.com/spreadsheets/d/1EZMuzbEj0DDzAAbbkeQG5CqMF7HUXKopjzWjOWAFmyY/export?format=csv"
+
+# -------- LOAD DATA (AUTO REFRESH) -------- #
+@st.cache_data(ttl=60)
+def load_data():
+    df = pd.read_csv(sheet_url)
+
+    # Clean column names
+    df.columns = df.columns.str.strip().str.lower()
+
+    # Clean price column
+    df['price'] = (
+        df['price']
+        .astype(str)
+        .str.replace(r"[^\d.]", "", regex=True)
+    )
+    df['price'] = pd.to_numeric(df['price'], errors='coerce')
+    df = df.dropna(subset=['price'])
+
+    return df
+
+df = load_data()
+
+# 🔄 Manual Refresh Button
+if st.button("🔄 Refresh Data"):
+    st.cache_data.clear()
+    st.rerun()
+
+# -------- SESSION STATE -------- #
 if "shortlist" not in st.session_state:
     st.session_state.shortlist = []
 
 # -------- AI SEARCH -------- #
-
 st.subheader("🧠 Smart Search")
+
 query = st.text_input("Type requirement (e.g. Bollywood singer under 1 lakh for wedding)")
 
 ai_budget = None
@@ -40,7 +54,8 @@ if query:
     # Extract budget
     match = re.search(r'(\d+)', query_lower)
     if match:
-        ai_budget = int(match.group(1)) * 1000 if int(match.group(1)) < 1000 else int(match.group(1))
+        val = int(match.group(1))
+        ai_budget = val * 1000 if val < 1000 else val
 
     # Match genre
     for g in df['genre'].dropna().unique():
