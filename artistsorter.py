@@ -4,7 +4,7 @@ import re
 
 st.set_page_config(page_title="Artist Search Tool", layout="wide")
 
-st.title("🎤 Artist Search Tool")
+st.title("🎤 WOM Artist Search Tool")
 
 # 🔗 GOOGLE SHEET LINK (REPLACE YOUR_ID)
 sheet_url = "https://docs.google.com/spreadsheets/d/1EZMuzbEj0DDzAAbbkeQG5CqMF7HUXKopjzWjOWAFmyY/export?format=csv"
